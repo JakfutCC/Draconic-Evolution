@@ -12,6 +12,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.brandon3055.draconicevolution.common.tileentities.TileDraconiumChest;
 import com.brandon3055.draconicevolution.common.utils.ICustomItemData;
+import com.brandon3055.draconicevolution.common.utils.WorldHeight;
 
 /**
  * Created by Brandon on 13/11/2014.
@@ -42,7 +43,7 @@ public class ItemBlockCustomData extends ItemBlock {
         if (!player.canPlayerEdit(x, y, z, side, stack)) return false;
 
         Block ownBlock = this.field_150939_a;
-        if (y == 255 && ownBlock.getMaterial().isSolid()) return false;
+        if (y == WorldHeight.getMaxHeight(world, 256) - 1 && ownBlock.getMaterial().isSolid()) return false;
 
         if (!world.canPlaceEntityOnSide(this.field_150939_a, x, y, z, false, side, player, stack)) return false;
 

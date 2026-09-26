@@ -8,6 +8,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
 import com.brandon3055.draconicevolution.common.tileentities.multiblocktiles.reactor.ReactorExplosion;
+import com.brandon3055.draconicevolution.common.utils.WorldHeight;
 import com.brandon3055.draconicevolution.common.utils.handlers.IProcess;
 
 /**
@@ -35,31 +36,35 @@ public class ChaosImplosionTrace implements IProcess {
     public void updateProcess() {
 
         float energy = power * 10;
+        int minY = WorldHeight.getMinHeight(worldObj, 1);
+        int maxY = WorldHeight.getMaxHeight(worldObj, 255);
 
-        for (int y = yCoord; y > 0 && energy > 0; y--) {
+        for (long traceY = yCoord; traceY >= minY && energy > 0; traceY--) {
+            int y = (int) traceY;
             List<Entity> entities = worldObj.getEntitiesWithinAABB(
                     Entity.class,
-                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, y + 1, zCoord + 1));
+                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, traceY + 1, zCoord + 1));
             for (Entity entity : entities) entity.attackEntityFrom(ChaosImplosion.chaosImplosion, power * 100);
 
             // energy -= block instanceof BlockLiquid ? 10 : block.getExplosionResistance(null);
 
             if (energy >= 0) worldObj.setBlockToAir(xCoord, y, zCoord);
-            energy -= 0.5F + (0.1F * (yCoord - y));
+            energy -= 0.5F + (0.1F * (yCoord - traceY));
         }
 
         energy = power * 20;
-        yCoord++;
-        for (int y = yCoord; y < 255 && energy > 0; y++) {
+        long upperStart = (long) yCoord + 1;
+        for (long traceY = upperStart; traceY < maxY && energy > 0; traceY++) {
+            int y = (int) traceY;
             List<Entity> entities = worldObj.getEntitiesWithinAABB(
                     Entity.class,
-                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, y + 1, zCoord + 1));
+                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, traceY + 1, zCoord + 1));
             for (Entity entity : entities) entity.attackEntityFrom(ReactorExplosion.FUSION_EXPLOSION, power * 100);
 
             // energy -= block instanceof BlockLiquid ? 10 : block.getExplosionResistance(null);
             if (energy >= 0) worldObj.setBlockToAir(xCoord, y, zCoord);
 
-            energy -= 0.5F + (0.1F * (y - yCoord));
+            energy -= 0.5F + (0.1F * (traceY - upperStart));
         }
 
         isDead = true;

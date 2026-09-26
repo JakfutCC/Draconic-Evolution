@@ -9,6 +9,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
+import com.brandon3055.draconicevolution.common.utils.WorldHeight;
 import com.brandon3055.draconicevolution.common.utils.handlers.IProcess;
 
 /**
@@ -35,13 +36,16 @@ public class ReactorExplosionTrace implements IProcess {
     public void updateProcess() {
 
         float energy = power * 10;
+        int minY = WorldHeight.getMinHeight(world, 1);
+        int maxY = WorldHeight.getMaxHeight(world, 255);
 
-        for (int y = yCoord; y > 0 && energy > 0; y--) {
+        for (long traceY = yCoord; traceY >= minY && energy > 0; traceY--) {
+            int y = (int) traceY;
             Block block = world.getBlock(xCoord, y, zCoord);
 
             List<Entity> entities = world.getEntitiesWithinAABB(
                     Entity.class,
-                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, y + 1, zCoord + 1));
+                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, traceY + 1, zCoord + 1));
             for (Entity entity : entities) {
                 entity.attackEntityFrom(ReactorExplosion.FUSION_EXPLOSION, power * 100);
             }
@@ -53,7 +57,7 @@ public class ReactorExplosionTrace implements IProcess {
                 world.setBlockToAir(xCoord, y, zCoord);
                 blockRemoved = true;
             }
-            energy -= 0.5F + 0.1F * (yCoord - y);
+            energy -= 0.5F + 0.1F * (yCoord - traceY);
 
             if (energy <= 0 && world.rand.nextInt(20) == 0 && blockRemoved) {
                 if (world.rand.nextInt(3) > 0) {
@@ -65,12 +69,13 @@ public class ReactorExplosionTrace implements IProcess {
         }
 
         energy = power * 20;
-        for (int y = yCoord + 1; y < 255 && energy > 0; y++) {
+        for (long traceY = (long) yCoord + 1; traceY < maxY && energy > 0; traceY++) {
+            int y = (int) traceY;
             Block block = world.getBlock(xCoord, y, zCoord);
 
             List<Entity> entities = world.getEntitiesWithinAABB(
                     Entity.class,
-                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, y + 1, zCoord + 1));
+                    AxisAlignedBB.getBoundingBox(xCoord, y, zCoord, xCoord + 1, traceY + 1, zCoord + 1));
             for (Entity entity : entities) {
                 entity.attackEntityFrom(ReactorExplosion.FUSION_EXPLOSION, power * 100);
             }
@@ -79,7 +84,7 @@ public class ReactorExplosionTrace implements IProcess {
             if (energy >= 0) {
                 world.setBlockToAir(xCoord, y, zCoord);
             }
-            energy -= 0.5F + (0.1F * (y - yCoord));
+            energy -= 0.5F + (0.1F * (traceY - yCoord));
         }
 
         isDead = true;
