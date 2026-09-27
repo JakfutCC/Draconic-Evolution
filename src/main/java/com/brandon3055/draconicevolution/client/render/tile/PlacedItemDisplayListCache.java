@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.ITickable;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -108,11 +109,18 @@ public class PlacedItemDisplayListCache {
         while (it.hasNext()) {
             Map.Entry<TilePlacedItem, CacheEntry> entry = it.next();
             TilePlacedItem tile = entry.getKey();
-            if (tile.isInvalid() || tile.getWorldObj() == null || tile.getStack() == null) {
+            if (tile.isInvalid() || tile.getStack() == null || !isResident(tile)) {
                 GL11.glDeleteLists(entry.getValue().listId, 1);
                 it.remove();
             }
         }
+    }
+
+    private static boolean isResident(TilePlacedItem tile) {
+        World world = tile.getWorldObj();
+        return world != null
+                && world.checkChunksExist(tile.xCoord, tile.yCoord, tile.zCoord, tile.xCoord, tile.yCoord, tile.zCoord)
+                && world.getTileEntity(tile.xCoord, tile.yCoord, tile.zCoord) == tile;
     }
 
     private void clearAll() {
